@@ -61,10 +61,10 @@ class TaskController extends AbstractController
         $entityManager->persist($newTask);
         $entityManager->flush();
 
-        $newTaskTitle = json_encode($datas['title']);
+        $newTaskId = $newTask->getId();
 
         $response = new Response(
-            $newTaskTitle,
+            $newTaskId,
             Response::HTTP_CREATED,
             ['content-type' => 'text/html']
         );  
@@ -75,17 +75,22 @@ class TaskController extends AbstractController
         /**
      * @Route("/edit/{id}", name="_edit", methods={"PATCH", "PUT"})
      */
-    public function edit($id, Request $request, ManagerRegistry $managerRegistry, TaskRepository $taskRepository): Response
+    public function edit($id, Request $request, ManagerRegistry $managerRegistry, TaskRepository $taskRepository, CategoryRepository $categoryRepository): Response
     {
         
         $editTask = $taskRepository->find($id);
         $datas = $request->toArray();
-
-        $editTask->setTitle($datas['title']);
-
-        // $editTask->setId = $id;
-        // $editTask->setCompletion = $datas['completion'];
-        // $editTask->setStatus = $datas['status'];
+        
+        if (isset($datas['title'])) {
+            $editTask->setTitle($datas['title']);
+        } elseif (isset($datas['completion'])) {
+            $editTask->setCompletion($datas['completion']);
+        } elseif (isset($datas['status'])) {
+            $editTask->setStatus($datas['status']);
+        } elseif (isset($datas['category'])) {
+            $selectedCategory = $categoryRepository->find($datas['category']);
+            $editTask->setCategory($selectedCategory);
+        }
 
         $entityManager = $managerRegistry->getManager();
         $entityManager->persist($editTask);
