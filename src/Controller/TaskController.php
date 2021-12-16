@@ -2,8 +2,13 @@
 
 namespace App\Controller;
 
+use App\Entity\Category;
 use App\Entity\Task;
+use App\Form\TaskType;
+use App\Repository\CategoryRepository;
 use App\Repository\TaskRepository;
+use DateTime;
+use DateTimeImmutable;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -38,18 +43,33 @@ class TaskController extends AbstractController
     /**
      * @Route("/add", name="_read", methods={"POST"})
      */
-    public function add(Request $request, ManagerRegistry $managerRegistry): void
+    public function add(Request $request, ManagerRegistry $managerRegistry, CategoryRepository $categoryRepository): Response
     {
         $newTask = new Task;
-        $newTask->title = $request->get('title');
-        $newTask->id = $request->get('id');
-        $newTask->completion = $request->get('completion');
-        $newTask->status = $request->get('status');
+        $datas = $request->toArray();
+
+        $newTask->setTitle($datas['title']);
+        $newTask->setCompletion(0);
+        $newTask->setStatus(1);
+        $newTask->setCreatedAt(new DateTimeImmutable());
+
+        $selectedCategory = $categoryRepository->find($datas['categoryId']);
+
+        $newTask->setCategory($selectedCategory);
 
         $entityManager = $managerRegistry->getManager();
         $entityManager->persist($newTask);
         $entityManager->flush();
-        
+
+        $newTaskTitle = json_encode($datas['title']);
+
+        $response = new Response(
+            $newTaskTitle,
+            Response::HTTP_CREATED,
+            ['content-type' => 'text/html']
+        );  
+
+        return $response;
     }
 
         /**
