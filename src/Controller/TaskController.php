@@ -67,17 +67,16 @@ class TaskController extends AbstractController
             $newTaskId,
             Response::HTTP_CREATED,
             ['content-type' => 'text/html']
-        );  
+        );
 
         return $response;
     }
 
-        /**
+    /**
      * @Route("/edit/{id}", name="_edit", methods={"PATCH", "PUT"})
      */
     public function edit($id, Request $request, ManagerRegistry $managerRegistry, TaskRepository $taskRepository, CategoryRepository $categoryRepository): Response
     {
-        
         $editTask = $taskRepository->find($id);
         $datas = $request->toArray();
         
@@ -98,6 +97,26 @@ class TaskController extends AbstractController
         
         $response = new Response(
             'edit OK',
+            Response::HTTP_NO_CONTENT,
+            ['content-type' => 'text/html']
+        );
+
+        return $response;
+    }
+
+    /**
+     * @Route("/delete/{id}", name="_delete", methods={"DELETE"})
+     */
+    public function delete($id, ManagerRegistry $managerRegistry, TaskRepository $taskRepository): Response
+    {
+
+        $taskToDelete = $taskRepository->find($id);
+        $entityManager = $managerRegistry->getManager();
+        $entityManager->remove($taskToDelete);
+        $entityManager->flush();
+
+        $response = new Response(
+            'delete OK',
             Response::HTTP_NO_CONTENT,
             ['content-type' => 'text/html']
         );
